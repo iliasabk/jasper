@@ -1041,15 +1041,16 @@ static uint_fast32_t inttobits(jas_seqent_t v, unsigned prec, bool sgnd)
 	uint_fast32_t ret;
 	assert(v >= 0 || sgnd);
 	ret = ((sgnd && v < 0) ? (JAS_POW2_X(jas_seqent_t, prec) + v) : v) &
-	  JAS_ONES(prec);
+	  JAS_CAST(uint_fast32_t, JAS_POW2_X(uint_fast64_t, prec) - 1);
 	return ret;
 }
 
 static jas_seqent_t bitstoint(uint_fast32_t v, unsigned prec, bool sgnd)
 {
 	jas_seqent_t ret;
-	v &= JAS_ONES(prec);
-	ret = (sgnd && (v & (1 << (prec - 1)))) ? (v - (1 << prec)) : v;
+	v &= JAS_CAST(uint_fast32_t, JAS_POW2_X(uint_fast64_t, prec) - 1);
+	ret = (sgnd && (v & JAS_POW2_X(uint_fast32_t, prec - 1))) ?
+	  JAS_CAST(jas_seqent_t, v) - JAS_POW2_X(jas_seqent_t, prec) : v;
 	return ret;
 }
 
