@@ -797,6 +797,17 @@ static int jpc_dec_tileinit(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 			  rlvl->prcwidthexpn;
 			rlvl->numvprcs = (brprcyend - tlprcystart) >>
 			  rlvl->prcheightexpn;
+			/* The product numhprcs * numvprcs must be evaluated in
+			  64 bits so that a wrapped result cannot defeat the
+			  limit check below. */
+			if (JAS_CAST(uint_fast64_t, rlvl->numhprcs) *
+			  rlvl->numvprcs >= 64 * 1024) {
+				/* avoid out-of-memory due to
+				   malicious file; this limit is
+				   rather arbitrary; "good" files I
+				   have seen have values 1..12 */
+				return -1;
+			}
 			rlvl->numprcs = rlvl->numhprcs * rlvl->numvprcs;
 
 			if (jas_get_debug_level() >= 10) {
@@ -807,14 +818,6 @@ static int jpc_dec_tileinit(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 				  compno, rlvlno, rlvl->xstart, rlvl->ystart, rlvl->xend,
 				  rlvl->yend, rlvl->prcwidthexpn, rlvl->prcheightexpn,
 				  rlvl->numhprcs, rlvl->numvprcs, rlvl->numprcs);
-			}
-
-			if (rlvl->numprcs >= 64 * 1024) {
-				/* avoid out-of-memory due to
-				   malicious file; this limit is
-				   rather arbitrary; "good" files I
-				   have seen have values 1..12 */
-				return -1;
 			}
 
 			if (rlvl->xstart >= rlvl->xend || rlvl->ystart >= rlvl->yend) {
