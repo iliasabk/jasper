@@ -296,10 +296,19 @@ static int jpc_pi_nextrpcl(register jpc_pi_t *pi)
 				  JAS_UINTFAST32_NUMBITS - 2) {
 					return -1;
 				}
-				xstep = picomp->hsamp * (JAS_CAST(uint_fast32_t, 1) <<
+				/* The sampling factor adds up to 8 more bits, so
+				  compute with uint_fast64_t and saturate to avoid
+				  overflow. */
+				const uint_fast64_t xstep64 = JAS_CAST(uint_fast64_t,
+				  picomp->hsamp) * (JAS_CAST(uint_fast64_t, 1) <<
 				  (pirlvl->prcwidthexpn + picomp->numrlvls - rlvlno - 1));
-				ystep = picomp->vsamp * (JAS_CAST(uint_fast32_t, 1) <<
+				const uint_fast64_t ystep64 = JAS_CAST(uint_fast64_t,
+				  picomp->vsamp) * (JAS_CAST(uint_fast64_t, 1) <<
 				  (pirlvl->prcheightexpn + picomp->numrlvls - rlvlno - 1));
+				xstep = (xstep64 > UINT_FAST32_MAX) ? UINT_FAST32_MAX :
+				  JAS_CAST(unsigned, xstep64);
+				ystep = (ystep64 > UINT_FAST32_MAX) ? UINT_FAST32_MAX :
+				  JAS_CAST(unsigned, ystep64);
 				pi->xstep = (!pi->xstep) ? xstep : JAS_MIN(pi->xstep, xstep);
 				pi->ystep = (!pi->ystep) ? ystep : JAS_MIN(pi->ystep, ystep);
 			}
@@ -333,19 +342,30 @@ static int jpc_pi_nextrpcl(register jpc_pi_t *pi)
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
-					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
-					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
+					/* The products below can exceed the range of
+					  uint_fast32_t, so compute them with uint_fast64_t
+					  to avoid overflow and division by zero. */
+					trx0 = JPC_CEILDIV(pi->xstart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << r);
+					try0 = JPC_CEILDIV(pi->ystart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << r);
 					if (((pi->x == pi->xstart &&
-					  ((trx0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpx)))
-					  || !(pi->x % (pi->picomp->hsamp << rpx))) &&
+					  ((JAS_CAST(uint_fast64_t, trx0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpx)))
+					  || !(pi->x % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << rpx))) &&
 					  ((pi->y == pi->ystart &&
-					  ((try0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpy)))
-					  || !(pi->y % (pi->picomp->vsamp << rpy)))) {
+					  ((JAS_CAST(uint_fast64_t, try0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpy)))
+					  || !(pi->y % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << rpy)))) {
 						const unsigned prchind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->x,
-						  pi->picomp->hsamp << r), pi->pirlvl->prcwidthexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->hsamp) << r),
+						  pi->pirlvl->prcwidthexpn) -
 						  JPC_FLOORDIVPOW2(trx0, pi->pirlvl->prcwidthexpn);
 						const unsigned prcvind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->y,
-						  pi->picomp->vsamp << r), pi->pirlvl->prcheightexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->vsamp) << r),
+						  pi->pirlvl->prcheightexpn) -
 						  JPC_FLOORDIVPOW2(try0, pi->pirlvl->prcheightexpn);
 						pi->prcno = prcvind * pi->pirlvl->numhprcs + prchind;
 						if (pi->prcno >= pi->pirlvl->numprcs) {
@@ -404,10 +424,19 @@ static int jpc_pi_nextpcrl(register jpc_pi_t *pi)
 				  JAS_UINTFAST32_NUMBITS - 2) {
 					return -1;
 				}
-				xstep = picomp->hsamp * (JAS_CAST(uint_fast32_t, 1) <<
+				/* The sampling factor adds up to 8 more bits, so
+				  compute with uint_fast64_t and saturate to avoid
+				  overflow. */
+				const uint_fast64_t xstep64 = JAS_CAST(uint_fast64_t,
+				  picomp->hsamp) * (JAS_CAST(uint_fast64_t, 1) <<
 				  (pirlvl->prcwidthexpn + picomp->numrlvls - rlvlno - 1));
-				ystep = picomp->vsamp * (JAS_CAST(uint_fast32_t, 1) <<
+				const uint_fast64_t ystep64 = JAS_CAST(uint_fast64_t,
+				  picomp->vsamp) * (JAS_CAST(uint_fast64_t, 1) <<
 				  (pirlvl->prcheightexpn + picomp->numrlvls - rlvlno - 1));
+				xstep = (xstep64 > UINT_FAST32_MAX) ? UINT_FAST32_MAX :
+				  JAS_CAST(unsigned, xstep64);
+				ystep = (ystep64 > UINT_FAST32_MAX) ? UINT_FAST32_MAX :
+				  JAS_CAST(unsigned, ystep64);
 				pi->xstep = (!pi->xstep) ? xstep : JAS_MIN(pi->xstep, xstep);
 				pi->ystep = (!pi->ystep) ? ystep : JAS_MIN(pi->ystep, ystep);
 			}
@@ -438,21 +467,32 @@ static int jpc_pi_nextpcrl(register jpc_pi_t *pi)
 						continue;
 					}
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
-					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
-					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
+					/* The products below can exceed the range of
+					  uint_fast32_t, so compute them with uint_fast64_t
+					  to avoid overflow and division by zero. */
+					trx0 = JPC_CEILDIV(pi->xstart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << r);
+					try0 = JPC_CEILDIV(pi->ystart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << r);
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
 					if (((pi->x == pi->xstart &&
-					  ((trx0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpx))) ||
-					  !(pi->x % (pi->picomp->hsamp << rpx))) &&
+					  ((JAS_CAST(uint_fast64_t, trx0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpx))) ||
+					  !(pi->x % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << rpx))) &&
 					  ((pi->y == pi->ystart &&
-					  ((try0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpy))) ||
-					  !(pi->y % (pi->picomp->vsamp << rpy)))) {
+					  ((JAS_CAST(uint_fast64_t, try0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpy))) ||
+					  !(pi->y % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << rpy)))) {
 						const unsigned prchind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->x,
-						  pi->picomp->hsamp << r), pi->pirlvl->prcwidthexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->hsamp) << r),
+						  pi->pirlvl->prcwidthexpn) -
 						  JPC_FLOORDIVPOW2(trx0, pi->pirlvl->prcwidthexpn);
 						const unsigned prcvind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->y,
-						  pi->picomp->vsamp << r), pi->pirlvl->prcheightexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->vsamp) << r),
+						  pi->pirlvl->prcheightexpn) -
 						  JPC_FLOORDIVPOW2(try0, pi->pirlvl->prcheightexpn);
 						pi->prcno = prcvind * pi->pirlvl->numhprcs + prchind;
 						assert(pi->prcno < pi->pirlvl->numprcs);
@@ -568,21 +608,32 @@ static int jpc_pi_nextcprl(register jpc_pi_t *pi)
 						continue;
 					}
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
-					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
-					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
+					/* The products below can exceed the range of
+					  uint_fast32_t, so compute them with uint_fast64_t
+					  to avoid overflow and division by zero. */
+					trx0 = JPC_CEILDIV(pi->xstart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << r);
+					try0 = JPC_CEILDIV(pi->ystart, JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << r);
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
 					if (((pi->x == pi->xstart &&
-					  ((trx0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpx))) ||
-					  !(pi->x % (pi->picomp->hsamp << rpx))) &&
+					  ((JAS_CAST(uint_fast64_t, trx0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpx))) ||
+					  !(pi->x % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->hsamp) << rpx))) &&
 					  ((pi->y == pi->ystart &&
-					  ((try0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpy))) ||
-					  !(pi->y % (pi->picomp->vsamp << rpy)))) {
+					  ((JAS_CAST(uint_fast64_t, try0) << r) %
+					  (JAS_CAST(uint_fast64_t, 1) << rpy))) ||
+					  !(pi->y % (JAS_CAST(uint_fast64_t,
+					  pi->picomp->vsamp) << rpy)))) {
 						const unsigned prchind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->x,
-						  pi->picomp->hsamp << r), pi->pirlvl->prcwidthexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->hsamp) << r),
+						  pi->pirlvl->prcwidthexpn) -
 						  JPC_FLOORDIVPOW2(trx0, pi->pirlvl->prcwidthexpn);
 						const unsigned prcvind = JPC_FLOORDIVPOW2(JPC_CEILDIV(pi->y,
-						  pi->picomp->vsamp << r), pi->pirlvl->prcheightexpn) -
+						  JAS_CAST(uint_fast64_t, pi->picomp->vsamp) << r),
+						  pi->pirlvl->prcheightexpn) -
 						  JPC_FLOORDIVPOW2(try0, pi->pirlvl->prcheightexpn);
 						pi->prcno = prcvind * pi->pirlvl->numhprcs + prchind;
 						assert(pi->prcno < pi->pirlvl->numprcs);
