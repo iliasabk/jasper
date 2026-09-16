@@ -219,6 +219,11 @@ int jas_matrix_bindsub(jas_matrix_t *mat0, jas_matrix_t *mat1,
 {
 	jas_matind_t i;
 
+	if (r0 < 0 || c0 < 0 || r0 > r1 || c0 > c1 ||
+	  r1 >= mat1->numrows_ || c1 >= mat1->numcols_ || !mat1->rows_) {
+		return -1;
+	}
+
 	if (mat0->data_) {
 		if (!(mat0->flags_ & JAS_MATRIX_REF)) {
 			jas_free(mat0->data_);
