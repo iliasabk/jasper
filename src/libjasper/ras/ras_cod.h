@@ -154,7 +154,7 @@ typedef struct {
 #define	RAS_RED(x)	((x) & 0xff)
 
 #define RAS_ROWSIZE(hdr) \
-	((((hdr)->width * (hdr)->depth + 15) / 16) * 2)
+	((((JAS_CAST(int_fast64_t, (hdr)->width) * (hdr)->depth) + 15) / 16) * 2)
 #define RAS_ISRGB(hdr) \
 	((hdr)->depth == 24 || (hdr)->depth == 32)
 

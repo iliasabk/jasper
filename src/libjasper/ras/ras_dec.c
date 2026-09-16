@@ -316,7 +316,7 @@ static int ras_getdatastd(jas_stream_t *in, ras_hdr_t *hdr, ras_cmap_t *cmap,
 {
 	int pad;
 	int nz;
-	int z;
+	uint_fast32_t z;
 	int c;
 	int y;
 	int x;
@@ -339,7 +339,8 @@ static int ras_getdatastd(jas_stream_t *in, ras_hdr_t *hdr, ras_cmap_t *cmap,
 		}
 	}
 
-	pad = RAS_ROWSIZE(hdr) - (hdr->width * hdr->depth + 7) / 8;
+	pad = RAS_ROWSIZE(hdr) - (JAS_CAST(int_fast64_t, hdr->width) *
+	  hdr->depth + 7) / 8;
 
 	for (y = 0; y < hdr->height; y++) {
 		nz = 0;
@@ -409,10 +410,10 @@ static int ras_getcmap(jas_stream_t *in, ras_hdr_t *hdr, ras_cmap_t *cmap)
 	case RAS_MT_EQUALRGB:
 		{
 		jas_logwarnf("warning: palettized images not fully supported\n");
-		numcolors = 1 << hdr->depth;
-		if (numcolors > RAS_CMAP_MAXSIZ) {
+		if (JAS_POW2_X(uint_fast64_t, hdr->depth) > RAS_CMAP_MAXSIZ) {
 			return -1;
 		}
+		numcolors = JAS_POW2_X(uint_fast32_t, hdr->depth);
 		actualnumcolors = hdr->maplength / 3;
 		for (i = 0; i < numcolors; i++) {
 			cmap->data[i] = 0;
