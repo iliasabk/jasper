@@ -333,6 +333,14 @@ static int jpc_pi_nextrpcl(register jpc_pi_t *pi)
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
+					/* The sampling factors shifted left can wrap around to
+					  zero, which would cause a division by zero below. */
+					if (!(pi->picomp->hsamp << r) ||
+					  !(pi->picomp->vsamp << r) ||
+					  !(pi->picomp->hsamp << rpx) ||
+					  !(pi->picomp->vsamp << rpy)) {
+						return -1;
+					}
 					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
 					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
 					if (((pi->x == pi->xstart &&
@@ -438,10 +446,18 @@ static int jpc_pi_nextpcrl(register jpc_pi_t *pi)
 						continue;
 					}
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
-					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
-					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
+					/* The sampling factors shifted left can wrap around to
+					  zero, which would cause a division by zero below. */
+					if (!(pi->picomp->hsamp << r) ||
+					  !(pi->picomp->vsamp << r) ||
+					  !(pi->picomp->hsamp << rpx) ||
+					  !(pi->picomp->vsamp << rpy)) {
+						return -1;
+					}
+					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
+					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
 					if (((pi->x == pi->xstart &&
 					  ((trx0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpx))) ||
 					  !(pi->x % (pi->picomp->hsamp << rpx))) &&
@@ -568,10 +584,18 @@ static int jpc_pi_nextcprl(register jpc_pi_t *pi)
 						continue;
 					}
 					r = pi->picomp->numrlvls - 1 - pi->rlvlno;
-					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
-					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
 					rpx = r + pi->pirlvl->prcwidthexpn;
 					rpy = r + pi->pirlvl->prcheightexpn;
+					/* The sampling factors shifted left can wrap around to
+					  zero, which would cause a division by zero below. */
+					if (!(pi->picomp->hsamp << r) ||
+					  !(pi->picomp->vsamp << r) ||
+					  !(pi->picomp->hsamp << rpx) ||
+					  !(pi->picomp->vsamp << rpy)) {
+						return -1;
+					}
+					trx0 = JPC_CEILDIV(pi->xstart, pi->picomp->hsamp << r);
+					try0 = JPC_CEILDIV(pi->ystart, pi->picomp->vsamp << r);
 					if (((pi->x == pi->xstart &&
 					  ((trx0 << r) % (JAS_CAST(uint_fast32_t, 1) << rpx))) ||
 					  !(pi->x % (pi->picomp->hsamp << rpx))) &&
