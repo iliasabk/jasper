@@ -722,13 +722,13 @@ static jpc_enc_cp_t *cp_create(const char *optstr, jas_image_t *image)
 	}
 
 	/* Ensure that the precinct width is valid. */
-	if (prcwidthexpn > 15) {
+	if (prcwidthexpn < 1 || prcwidthexpn > 15) {
 		jas_logerrorf("invalid precinct width\n");
 		goto error;
 	}
 
 	/* Ensure that the precinct height is valid. */
-	if (prcheightexpn > 15) {
+	if (prcheightexpn < 1 || prcheightexpn > 15) {
 		jas_logerrorf("invalid precinct height\n");
 		goto error;
 	}
