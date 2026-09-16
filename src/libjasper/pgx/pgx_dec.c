@@ -299,7 +299,7 @@ static int pgx_gethdr(jas_stream_t *in, pgx_hdr_t *hdr)
 		jas_logerrorf("cannot get height\n");
 		goto error;
 	}
-	if (hdr->prec > 32) {
+	if (hdr->prec < 1 || hdr->prec > 32) {
 		jas_logerrorf("unsupported precision (%d)\n", hdr->prec);
 		goto error;
 	}
@@ -369,7 +369,7 @@ static int_fast32_t pgx_getword(jas_stream_t *in, bool bigendian, int prec)
 		j = bigendian ? (wordsize - 1 - i) : i;
 		val = val | ((c & 0xffU) << (8 * j));
 	}
-	val &= (JAS_CAST(uint_fast32_t, 1) << prec) - 1;
+	val &= (JAS_CAST(uint_fast64_t, 1) << prec) - 1;
 	return val;
 
 error:
@@ -524,7 +524,8 @@ static int pgx_getuint32(jas_stream_t *in, uint_fast32_t *val)
 static jas_seqent_t pgx_wordtoint(uint_fast32_t v, int prec, bool sgnd)
 {
 	jas_seqent_t ret;
-	v &= (1 << prec) - 1;
-	ret = (sgnd && (v & (1 << (prec - 1)))) ? (v - (1 << prec)) : v;
+	v &= JAS_CAST(uint_fast32_t, JAS_POW2_X(uint_fast64_t, prec) - 1);
+	ret = (sgnd && (v & JAS_POW2_X(uint_fast32_t, prec - 1))) ?
+	  JAS_CAST(jas_seqent_t, v) - JAS_POW2_X(jas_seqent_t, prec) : v;
 	return ret;
 }
